@@ -1,15 +1,17 @@
 FROM php:8.2-apache
 
-# Cài extension PostgreSQL
-RUN apt-get update && apt-get install -y \
-    libpq-dev \
-    && docker-php-ext-install pgsql pdo pdo_pgsql
+# Enable Apache mod_rewrite
+RUN a2enmod rewrite
 
-# Copy project
+# Install PostgreSQL extensions
+RUN apt-get update && apt-get install -y libpq-dev \
+    && docker-php-ext-install pdo pdo_pgsql pgsql
+
+# Copy source code
 COPY . /var/www/html/
 
-# Mở quyền
+# Set permissions
 RUN chown -R www-data:www-data /var/www/html
 
-# Bật mod_rewrite
-RUN a2enmod rewrite
+# Apache Document Root fix (optional)
+WORKDIR /var/www/html/
