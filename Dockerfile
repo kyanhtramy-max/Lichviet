@@ -1,22 +1,21 @@
 FROM php:8.2-apache
 
-# Enable PHP + Apache modules
-RUN a2enmod php8.2
+# Enable Apache rewrite
 RUN a2enmod rewrite
 
-# Fix DirectoryIndex to load index.php first
+# Fix DirectoryIndex to load index.php
 RUN sed -i 's/DirectoryIndex .*/DirectoryIndex index.php index.html/' /etc/apache2/mods-enabled/dir.conf
 
-# Install PostgreSQL extension
+# Fix Apache ServerName warning
+RUN echo "ServerName localhost" >> /etc/apache2/apache2.conf
+
+# Install PostgreSQL Extensions for PHP
 RUN apt-get update && apt-get install -y libpq-dev \
     && docker-php-ext-install pdo pdo_pgsql pgsql
 
-# Fix Apache ServerName
-RUN echo "ServerName localhost" >> /etc/apache2/apache2.conf
-
-# Copy code to web root
+# Copy application files
 WORKDIR /var/www/html
 COPY . /var/www/html
 
-# Permissions
+# Set permissions
 RUN chown -R www-data:www-data /var/www/html
