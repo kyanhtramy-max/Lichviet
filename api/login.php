@@ -1,4 +1,4 @@
-<?php
+<!-- <?php
 session_start();
 header('Content-Type: application/json; charset=utf-8');
 
@@ -83,4 +83,61 @@ try {
     $response['message'] = $e->getMessage();
 }
 
-echo json_encode($response);
+echo json_encode($response); -->
+
+<?php
+session_start();
+header('Content-Type: application/json; charset=utf-8');
+require_once __DIR__ . '/../config.php';
+
+try {
+    if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+        throw new Exception('Phương thức không hợp lệ');
+    }
+
+    $email = trim($_POST['email'] ?? '');
+    $password = $_POST['password'] ?? '';
+
+    if ($email === '' || $password === '') {
+        throw new Exception('Vui lòng nhập email và mật khẩu');
+    }
+
+    $stmt = $conn->prepare("
+        SELECT u.*, up.phone, up.dob AS birthday, up.gender
+        FROM users u
+        LEFT JOIN user_profiles up ON u.id = up.user_id
+        WHERE u.email = :email
+        LIMIT 1
+    ");
+
+    $stmt->execute(['email' => $email]);
+    $user = $stmt->fetch();
+
+    if (!$user || !password_verify($password, $user['password_hash'])) {
+        throw new Exception("Email hoặc mật khẩu không đúng");
+    }
+
+    if ($user['status'] != 1) {
+        throw new Exception("Tài khoản bị khóa");
+    }
+
+    $_SESSION['user_id'] = $user['id'];
+
+    echo json_encode([
+        'success' => true,
+        'message' => 'Đăng nhập thành công',
+        'user' => [
+            'id' => $user['id'],
+            'name' => $user['name'],
+            'email' => $user['email'],
+            'phone' => $user['phone'],
+            'birthday' => $user['birthday'],
+            'gender' => $user['gender'],
+            'role' => $user['role'],
+            'joined' => $user['created_at']
+        ]
+    ]);
+
+} catch (Exception $e) {
+    echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+}
