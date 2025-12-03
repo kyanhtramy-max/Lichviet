@@ -1,20 +1,21 @@
 FROM php:8.2-apache
 
-# Cài extension PostgreSQL
+# Install PostgreSQL extension
 RUN apt-get update && apt-get install -y libpq-dev \
     && docker-php-ext-install pdo pdo_pgsql pgsql
 
-# Bật mod_rewrite
+# Enable mod_rewrite
 RUN a2enmod rewrite
 
-# Bật PHP (CỰC QUAN TRỌNG CHO APACHE)
+# Fix ServerName warning
 RUN echo "ServerName localhost" >> /etc/apache2/apache2.conf
 
-# Set DocumentRoot
-WORKDIR /var/www/html/
+# 🔥 ÉP APACHE ƯU TIÊN INDEX.PHP
+RUN sed -i 's/DirectoryIndex .*/DirectoryIndex index.php index.html/g' /etc/apache2/mods-enabled/dir.conf
 
-# Copy code vào sau khi enable module
-COPY . /var/www/html/
+# Copy source code
+WORKDIR /var/www/html
+COPY . /var/www/html
 
-# Fix quyền
+# Permissions
 RUN chown -R www-data:www-data /var/www/html
