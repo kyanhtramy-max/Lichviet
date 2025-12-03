@@ -1,17 +1,20 @@
 FROM php:8.2-apache
 
-# Enable Apache modules
-RUN a2enmod rewrite
-
-# Install PostgreSQL extensions
+# Cài extension PostgreSQL
 RUN apt-get update && apt-get install -y libpq-dev \
     && docker-php-ext-install pdo pdo_pgsql pgsql
 
-# Set Apache Document Root (nếu bạn dùng index.php ở root)
+# Bật mod_rewrite
+RUN a2enmod rewrite
+
+# Bật PHP (CỰC QUAN TRỌNG CHO APACHE)
+RUN echo "ServerName localhost" >> /etc/apache2/apache2.conf
+
+# Set DocumentRoot
 WORKDIR /var/www/html/
 
-# Copy source code
+# Copy code vào sau khi enable module
 COPY . /var/www/html/
 
-# Permissions
+# Fix quyền
 RUN chown -R www-data:www-data /var/www/html
