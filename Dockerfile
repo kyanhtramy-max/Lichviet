@@ -11,5 +11,5 @@ COPY . /var/www/html/
 # Mở quyền
 RUN chown -R www-data:www-data /var/www/html
 
-# Bật mod_rewrite nếu cần
+# Bật mod_rewrite
 RUN a2enmod rewrite

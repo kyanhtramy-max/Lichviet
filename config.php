@@ -1,23 +1,32 @@
 <?php
-// config.php
 
-// Đọc từ ENV trước (Render), nếu không có thì dùng giá trị mặc định (local)
-$DB_HOST = getenv('DB_HOST') ?: '127.0.0.1';
-$DB_PORT = getenv('DB_PORT') ?: 3306;
-$DB_USER = getenv('DB_USER') ?: 'root';
-$DB_PASS = getenv('DB_PASS') ?: '';
-$DB_NAME = getenv('DB_NAME') ?: 'lichviet';
+$DB_HOST = getenv('DB_HOST');
+$DB_PORT = getenv('DB_PORT') ?: '5432';
+$DB_NAME = getenv('DB_NAME');
+$DB_USER = getenv('DB_USER');
+$DB_PASS = getenv('DB_PASS');
+$DB_SSLMODE = getenv('DB_SSLMODE') ?: 'require';
 
-$conn = new mysqli($DB_HOST, $DB_USER, $DB_PASS, $DB_NAME, (int)$DB_PORT);
+// Format connection string
+$conn_string = sprintf(
+    "host=%s port=%s dbname=%s user=%s password=%s sslmode=%s",
+    $DB_HOST,
+    $DB_PORT,
+    $DB_NAME,
+    $DB_USER,
+    $DB_PASS,
+    $DB_SSLMODE
+);
 
-if ($conn->connect_error) {
+$conn = pg_connect($conn_string);
+
+if (!$conn) {
     header('Content-Type: application/json; charset=utf-8');
     http_response_code(500);
     echo json_encode([
         'success' => false,
-        'message' => 'Không thể kết nối CSDL: ' . $conn->connect_error
+        'message' => '❌ Không thể kết nối PostgreSQL',
+        'error' => pg_last_error()
     ]);
     exit;
 }
-
-$conn->set_charset('utf8mb4');
