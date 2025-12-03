@@ -1,4 +1,4 @@
-<!-- <?php
+<?php
 session_start();
 header('Content-Type: application/json; charset=utf-8');
 
@@ -101,67 +101,4 @@ try {
     $response['message'] = $e->getMessage();
 }
 
-echo json_encode($response); -->
-
-<?php
-session_start();
-header('Content-Type: application/json; charset=utf-8');
-require_once __DIR__ . '/../config.php';
-
-try {
-    if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-        throw new Exception('Phương thức không hợp lệ');
-    }
-
-    $name     = trim($_POST['name']);
-    $email    = trim($_POST['email']);
-    $password = $_POST['password'];
-
-    if ($name === '' || $email === '' || $password === '') {
-        throw new Exception('Vui lòng nhập đầy đủ thông tin');
-    }
-
-    // Kiểm tra email tồn tại
-    $stmt = $conn->prepare("SELECT id FROM users WHERE email = :email");
-    $stmt->execute(['email' => $email]);
-    if ($stmt->fetch()) {
-        throw new Exception('Email đã được sử dụng');
-    }
-
-    $hash = password_hash($password, PASSWORD_BCRYPT);
-
-    // Tạo user
-    $stmt = $conn->prepare("
-        INSERT INTO users (name, email, password_hash, role, created_at)
-        VALUES (:name, :email, :pass, 'user', NOW())
-        RETURNING id
-    ");
-
-    $stmt->execute([
-        'name' => $name,
-        'email' => $email,
-        'pass' => $hash
-    ]);
-
-    $userId = $stmt->fetchColumn();
-
-    // Tạo profile rỗng
-    $stmt = $conn->prepare("INSERT INTO user_profiles (user_id) VALUES (:id)");
-    $stmt->execute(['id' => $userId]);
-
-    $_SESSION['user_id'] = $userId;
-
-    echo json_encode([
-        'success' => true,
-        'message' => 'Đăng ký thành công!',
-        'user' => [
-            'id' => $userId,
-            'name' => $name,
-            'email' => $email,
-            'role' => 'user'
-        ]
-    ]);
-
-} catch (Exception $e) {
-    echo json_encode(['success' => false, 'message' => $e->getMessage()]);
-}
+echo json_encode($response);
